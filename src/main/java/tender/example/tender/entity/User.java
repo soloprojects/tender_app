@@ -1,7 +1,11 @@
 package tender.example.tender.entity;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -14,11 +18,19 @@ import java.util.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Builder
+@Table(name = "users")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class User implements UserDetails {
 
-    private String username;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="id")
+    private long id;
+    private String email;
     private String firstname;
     private String lastname;
+    @JsonIgnore
     private String password;
 
     @ManyToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
@@ -28,6 +40,9 @@ public class User implements UserDetails {
             inverseJoinColumns = {@JoinColumn(name = "role_id")}
     )
     Set<Role> roles = new HashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<Token> tokens;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -41,12 +56,13 @@ public class User implements UserDetails {
 
     @Override
     public String getPassword() {
-        return null;
+        return this.password;
     }
 
     @Override
     public String getUsername() {
-        return null;
+
+        return this.email;
     }
 
     @Override
